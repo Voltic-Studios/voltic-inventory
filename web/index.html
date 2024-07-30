@@ -4,12 +4,192 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Voltic Inventory</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <link rel="stylesheet" href="https://cdn.joordih.lol/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <link rel="stylesheet" href="https://cdn.joordih.lol/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            textShadow: {
+              sm: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+              DEFAULT: "2px 2px 4px rgba(255, 255, 255, 0.5)",
+              lg: "3px 3px 6px rgba(0, 0, 0, 0.5)",
+            },
+          },
+        },
+        plugins: [
+          function ({ addUtilities }) {
+            addUtilities({
+              ".text-shadow-sm": {
+                textShadow: "1px 1px 2px rgba(255, 255, 255, 0.5)",
+              },
+              ".text-shadow": {
+                textShadow: "0px 1px 2px rgba(255, 255, 255, 0.5)",
+              },
+              ".text-shadow-lg": {
+                textShadow: "3px 3px 6px rgba(0, 0, 0, 0.5)",
+              },
+            });
+          },
+        ],
+      };
+    </script>
   </head>
   <body>
-    <div id="app">
+    <div
+      id="app"
+      class="bg-hero bg-no-repeat bg-cover bg-center bg-fixed h-screen w-screen flex items-center justify-center font-mono"
+      style="background-image: url('assets/imgs/background.jpg')"
+    >
+      <div
+        id="jyw3s1zctfb"
+        class="w-full max-w-md rounded-lg p-4 space-y-2 fixed top-1/2 right-0 transform -translate-y-1/2"
+        :class="inventory.open ? '' : 'hidden'"
+      >
+        <div class="flex items-center space-x-4 border-gray-700 pb-1">
+          <div
+            class="bg-stone-950/40 hover:bg-stone-700/60 border-[1px] border-transparent hover:border-white inline-flex items-center justify-center rounded-md text-sm font-bold w-20 h-10 transition-colors"
+            :class="inventory.data.currentCategory == 'all' ? 'bg-stone-500/40 border-white/70 text-black/40' : 'text-white'"
+            @click="inventory.data.currentCategory = 'all'"
+          >
+            <i
+              class="fa-solid fa-ellipsis"
+              :class="inventory.data.currentCategory == 'all' ? 'text-white' : 'text-white/60'"
+            ></i>
+          </div>
+          <div
+            class="bg-stone-950/40 hover:bg-stone-700/60 border-[1px] border-transparent hover:border-white inline-flex items-center justify-center rounded-md text-sm font-bold w-20 h-10 transition-colors"
+            :class="inventory.data.currentCategory === 'consumables' ? 'bg-stone-500/40 border-white/70 text-black/40' : 'text-white'"
+            @click="inventory.data.currentCategory = 'consumables'"
+          >
+            <i
+              class="fa-solid fa-utensils"
+              :class="inventory.data.currentCategory === 'consumables' ? 'text-white' : 'text-white/60'"
+            ></i>
+          </div>
+          <div
+            class="bg-stone-950/40 shadow shadow-stone-950/50 hover:bg-stone-700/60 border-[1px] border-transparent hover:border-white inline-flex items-center justify-center rounded-md text-sm font-bold w-20 h-10 transition-colors"
+            :class="inventory.data.currentCategory === 'weapons' ? 'bg-stone-500/40 border-white/70 text-black/40' : 'text-white'"
+            @click="inventory.data.currentCategory = 'weapons'"
+          >
+            <i
+              class="fa-solid fa-gun"
+              :class="inventory.data.currentCategory === 'weapons' ? 'text-white' : 'text-white/60'"
+            ></i>
+          </div>
+        </div>
 
+        <div class="flex justify-between items-center p-0">
+          <div
+            class="flex h-2 w-[80%] bg-stone-950/40 shadow shadow-stone-950/40 rounded-xl"
+          >
+            <div
+              class="h-[3px] mx-[2px] mt-[2px] bg-gray-400 rounded-xl shadow shadow-gray-400"
+              :style="{ width: `${(inventory.data.weight.current / inventory.data.weight.max) * 100}%` }"
+            ></div>
+          </div>
+          <div
+            class="flex font-mono tracking-wide ml-4 mr-2 mb-[2px] p-0 font-semibold text-white"
+          >
+            {{inventory.data.weight.current}}/{{inventory.data.weight.max}}
+            <span class="ml-[2px] text-gray-400"> kg</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <div
+            data-v0-t="card"
+            v-for="(item, index) in filteredItems"
+            :key="index"
+          >
+            <div :id="`${item.name}`" @click="openItemOptions(item.name)">
+              <div
+                class="border-[1px] border-white/0 shadow-sm flex items-center justify-between bg-stone-900/90 hover:border-white hover:bg-stone-700/70 text-white p-2 rounded-lg"
+              >
+                <div class="flex items-center">
+                  <img
+                    :src="`assets/items/${item.name}.png`"
+                    alt="Item Image"
+                    class="w-10 h-10 rounded-full"
+                    width="40"
+                    height="40"
+                    style="aspect-ratio: 40 / 40; object-fit: cover"
+                  />
+                  <div class="ml-2">
+                    <div class="font-bold tracking-wider">{{item.label}}</div>
+                  </div>
+                </div>
+                <div class="flex flex-col align-center justify-center">
+                  <div
+                    class="flex w-10 h-5 bg-stone-400/30 shadow-sm shadow-stone-400/40 rounded-[5px] justify-center align-center"
+                  >
+                    <div
+                      class="text-md mt-[-2px] font-bold text-shadow-sm shadow-white/60"
+                    >
+                      {{item.count}}
+                    </div>
+                  </div>
+                  <div
+                    class="text-xs font-semibold mx-[10px] mt-[1.5px] text-gray-200/30 mx-2"
+                  >
+                    {{item.weight}}kg
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              :id="`item-options-${item.name}`"
+              class="relative"
+              hidden
+              @click="openItemOptions(item.name)"
+            >
+              <div
+                class="flex max-h-[58px] z-20 items-center relative justify-between border-[1px] border-transparent bg-stone-800/70 hover:border-gray-300/70 hover:bg-stone-700/70 text-white p-2 rounded-lg"
+              >
+                <div class="flex w-[35%] items-center">
+                  <div class="flex items-center">
+                    <img
+                      :src="`assets/items/${item.name}.png`"
+                      alt="Item Image"
+                      class="w-10 h-10 rounded-full"
+                      width="40"
+                      height="40"
+                      style="aspect-ratio: 40 / 40; object-fit: cover"
+                    />
+                    <div class="ml-2">
+                      <div class="font-bold tracking-wider">{{item.label}}</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex justify-end gap-[7px] items-center w-[65%]">
+                  <div
+                    class="bg-stone-950/70 hover:bg-stone-700/60 border-[1px] border-transparent hover:border-white inline-flex items-center justify-center rounded-md text-sm font-bold w-20 h-10 transition-colors"
+                    @click="dropItem(item.name)"
+                  >
+                    <i class="fa-solid fa-trash text-white"></i>
+                  </div>
+                  <div
+                    class="bg-stone-950/70 hover:bg-stone-700/60 border-[1px] border-transparent hover:border-white inline-flex items-center justify-center rounded-md text-sm font-bold w-20 h-10 transition-colors"
+                    @click="giveItem(item.name)"
+                  >
+                    <i class="fa-solid fa-handshake text-white"></i>
+                  </div>
+                  <div
+                    class="bg-stone-950/70 hover:bg-stone-700/60 border-[1px] border-transparent hover:border-white inline-flex items-center justify-center rounded-md text-sm font-bold w-20 h-10 transition-colors"
+                    @click="useItem(item.name)"
+                  >
+                    <i class="fa-solid fa-hand-point-up text-white"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>

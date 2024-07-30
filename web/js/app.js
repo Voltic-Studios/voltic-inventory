@@ -1,57 +1,133 @@
-class Item {
-    constructor(name, count, label, weight, usable, rare, canRemove) {
-        this.name = name;
-        this.count = count;
-        this.label = label;
-        this.weight = weight;
-        this.usable = usable;
-        this.rare = rare;
-        this.canRemove = canRemove;
-    }
-}
-
 const app = new Vue({
-    el: '#app',
-    data: {
-        inventory: {
-            open: false,
-            data: {
-                weight: {
-                    current: 1.5,
-                    max: 15
-                },
-                categories: [
-                    'all',
-                    'other',
-                    'weapons',
-                    'consumables'
-                ],
-                items: [ new Item('hamburger', 1, 'Hambroguesa', 0.2, true, false, true) ]
-            }
-        }
-    },
-    methods: {
-        post: function(url, data, callback) {
-            $.post(`https://${GetParentResourceName()}/${url}`, JSON.stringify(data) || JSON.stringify({}), cb || function () { });
+  el: "#app",
+  data: {
+    inventory: {
+      open: true,
+      data: {
+        weight: {
+          current: 1.5,
+          max: 15,
         },
+        currentCategory: "all",
+        categories: ["all", "other", "weapons", "consumables"],
+        items: [
+          {
+            name: "bread",
+            label: "Pan",
+            count: 1,
+            weight: 1,
+            category: "consumables",
+          },
+          {
+            name: "weapon_appistol",
+            label: "Pistola AP",
+            count: 1,
+            weight: 5,
+            category: "weapons",
+          },
+        ],
+      },
+    },
+  },
+  methods: {
+    post: function (url, data, callback) {
+      $.post(
+        `https://${GetParentResourceName()}/${url}`,
+        JSON.stringify(data) || JSON.stringify({}),
+        cb || function () {}
+      );
+    },
 
-        handleMessage(event) {
-            const { action, data } = event.data;
+    openItemOptions: function (item) {
+      let closed = $("#" + item);
+      let opened = $("#item-options-" + item);
 
-            switch (action) {
-                case 'open': {
-                    this.inventory.open = true;
+      if (closed.is(":visible")) {
+        closed.hide();
+        opened.show();
+      } else {
+        closed.show();
+        opened.hide();
+      }
+    },
 
-                    this.data.inventory.data.weight.current = data.weight;
-                    this.data.inventory.data.weight.max = data.maxWeight;
+    handleMessage(event) {
+      const { action, data } = event.data;
 
-                    for (let i = 0; i < data.items.length; i++) {
-                        const item = data.items[i];
-                        this.data.inventory.data.items.push(new Item(item.name, item.count, item.label, item.weight, item.usable, item.rare, item.canRemove));
-                    }
-                    break;
-                }
-            }
+      switch (action) {
+        case "open": {
+          console.log("open inventory");
+          this.inventory.open = true;
+
+          this.inventory.data.weight.current = data.weight;
+          this.inventory.data.weight.max = data.maxWeight;
+
+          for (let i = 0; i < data.inventory.items.length; i++) {
+            const inventoryItem = data.inventory.items[i];
+
+            console.log(inventoryItem);
+
+            this.inventory.data.items.push({
+              name: inventoryItem.name,
+              label: inventoryItem.label,
+              count: inventoryItem.count,
+              weight: inventoryItem.weight / 1000,
+              category: inventoryItem.category,
+            });
+          }
+          break;
         }
-    }
-})
+      }
+    },
+  },
+  computed: {
+    filteredItems() {
+      console.log("Current Category:", this.inventory.data.currentCategory);
+      console.log("Items:", this.inventory.data.items);
+
+      if (this.inventory.data.currentCategory === "all") {
+        return this.inventory.data.items;
+      } else {
+        const filtered = this.inventory.data.items.filter(
+          (item) => item.category === this.inventory.data.currentCategory
+        );
+        console.log("Filtered Items:", filtered);
+        return filtered;
+      }
+    },
+  },
+  mounted() {
+    window.addEventListener("message", this.handleMessage);
+
+    setTimeout(() => {
+      document.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            action: "open",
+            data: {
+              inventory: {
+                open: true,
+                items: [
+                  {
+                    name: "bread",
+                    label: "Pan",
+                    count: 1,
+                    weight: 1,
+                    category: "consumables",
+                  },
+                  {
+                    name: "weapon_appistol",
+                    label: "Pistola AP",
+                    count: 1,
+                    weight: 5,
+                    category: "weapons",
+                  },
+                ],
+              },
+            },
+          },
+        })
+      );
+    }, 1500);
+  },
+});
