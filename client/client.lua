@@ -68,11 +68,54 @@ function openInventory()
                     category = "other"
                 })
             end
+=======
+			if Config.ItemCategories.Consumables[item.name] then
+				table.insert(filteredItems, {
+					name = item.name,
+					label = item.label,
+					weight = item.weight,
+					count = item.count,
+					category = "consumables",
+				})
+			end
+			if Config.ItemCategories.Drugs[item.name] then
+				table.insert(filteredItems, {
+					name = item.name,
+					label = item.label,
+					weight = item.weight,
+					count = item.count,
+					category = "drugs",
+				})
+			end
+			if Config.ItemCategories.Weapons[item.name] then
+				table.insert(filteredItems, {
+					name = item.name,
+					label = item.label,
+					weight = item.weight,
+					count = item.count,
+					category = "weapons",
+				})
+			end
+			if
+				not Config.ItemCategories.Consumables[item.name]
+				and not Config.ItemCategories.Drugs[item.name]
+				and not Config.ItemCategories.Weapons[item.name]
+			then
+				table.insert(filteredItems, {
+					name = item.name,
+					label = item.label,
+					weight = item.weight,
+					count = item.count,
+					category = "other",
+				})
+			end
+>>>>>>> dc8b0a8f21bc222b5a265f0ce89ac31802740714
 		end
 
 		SendNUIMessage({
 			action = "open",
 			data = {
+<<<<<<< HEAD
                 inventory = {
                     open = true,
                     items = filteredItems,
@@ -87,5 +130,21 @@ function openInventory()
 
 		SetNuiFocus(true, true)
         SetNuiFocusKeepInput(true)
+=======
+				inventory = {
+					open = true,
+					items = filteredItems,
+				},
+				money = cb.money,
+				accounts = cb.accounts,
+				weapons = cb.weapons,
+				weight = cb.weight,
+				maxWeight = cb.maxWeight,
+			},
+		})
+
+		SetNuiFocus(true, true)
+		SetNuiFocusKeepInput(true)
+>>>>>>> dc8b0a8f21bc222b5a265f0ce89ac31802740714
 	end, GetPlayerServerId(PlayerId()))
 end
